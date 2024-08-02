@@ -3,6 +3,8 @@ from . import views
 from .views import UserCreate, Logout
 from rest_framework.authtoken.views import obtain_auth_token
 from .views import ProtectedView
+from .views import FileUploadedView
+
 
 urlpatterns = [
     
@@ -13,6 +15,7 @@ urlpatterns = [
     path('login/', obtain_auth_token, name='api_token_auth'),
     path('logout/', Logout.as_view(), name='logout'),
     path('protected/', ProtectedView.as_view(), name='protected'),
+    path('upload/', FileUploadedView.as_view(), name = 'file-upload'),
     
 ]
 

@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-o%u8+&-d%&4cwd7a!-yy=lkikz)&=(-9$vxpkh&hfp15+gzmel
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [".awsapprunner.com"]
 
 
 # Application definition
@@ -40,7 +40,19 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "myapp", # App name 
+    "storages",
+    "drf_yasg",
 ]
+
+# AWS Access Keys 
+AWS_ACCESS_KEY_ID = "AKIAQFLZD52ITL4G6CFT"
+AWS_SECRET_ACCESS_KEY = "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"
+AWS_STORAGE_BUCKET_NAME = "djangos3bucket7357" # 7357 == Test in numbers
+AWS_S3_FILE_OVERRIDE = False
+AWS_DEFAULT_ACL = None
+AWS_S3_REGION_NAME = "us-east-2"
+AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+
 
 # Framework Token
 REST_FRAMEWORK = {
@@ -48,6 +60,26 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         
         "rest_framework.authentication.TokenAuthentication",
+        
+    ],
+    
+    "DEFAULT_THROTTLE_CLASSES": [
+        
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle"
+        
+    ],
+    
+    "DEFAULT_THROTTLE_RATES": {
+        
+        "anon": "100/day",
+        "user": "1000/day"
+        
+    },
+    
+    "DEFAULT_FILTER_BACKENDS": [
+        
+        "django_filters.rest_framework.DjangoFilterBackend"
         
     ]
     
@@ -133,7 +165,28 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
+# STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STORAGES = {
+    
+    "default": {
+        
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        
+    },
+    "staticfiles": {
+        
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+
+    }
+    
+}
+
+# Media File Configuration
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+MEDIA_URL = f"htttps://{AWS_S3_CUSTOM_DOMAIN}/media/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

@@ -10,6 +10,16 @@ from rest_framework.views import APIView
 from .serializers import UserSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
+from rest_framework.parsers import MultiPartParser, FormParser
+from .serializers import UploadedFileSerializer
+from rest_framework.throttling import UserRateThrottle
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.generics import ListAPIView
+from .models import MyModel
+from .serializers import MyModelSerializer
+from .pagination import StandardResultsSetPagination
+from .pagination import StandardCursorPagination
 
 @api_view(['GET', 'POST'])
 def book_list(request):
@@ -66,9 +76,38 @@ class Logout(APIView):
         request.user.auth_token.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
-class ProtectedView(APIView):
+class ProtectedView(APIView): 
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
         content = {'message': 'This is a protected route. You are seeing this because you are authenticated'}
         return Response(content)
+    
+    
+class FileUploadedView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    throttle_classes = [UserRateThrottle]
+    
+    def post(self, request, *args, **kwargs):
+        file_serializer = UploadedFileSerializer(data = request.data)
+        if file_serializer.is_valid():
+            file_serializer.save()
+            return Response(file_serializer.data, status = status.HTTP_201_CREATED)
+        else:
+            return Response(file_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+class BookViewSet(ModelViewSet):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['genre', 'publicatio_year']
+    
+class MyModelListView(ListAPIView):
+    queryset = MyModel.objects.all()
+    serializer_class = MyModelSerializer
+    pagination_class = StandardResultsSetPagination
+
+class MyModelCursorView(ListAPIView):
+    queryset = MyModel.objects.all()
+    serializer_class = MyModelSerializer
+    pagination_class = StandardCursorPagination
